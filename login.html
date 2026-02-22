@@ -391,7 +391,7 @@
         }
     </style>
     <!-- PWA Configuration -->
-<link rel="manifest" href="pwa/manifest.json">
+<link rel="manifest" href="/nlrd77/manifest.json">
 <meta name="theme-color" content="#212121">
 
 <!-- iOS PWA Support -->
@@ -895,7 +895,7 @@ function installPWA() {
 // ========== SERVICE WORKER REGISTRATION ==========
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    const swUrl = 'pwa/sw.js';
+    const swUrl = '/nlrd77/sw.js';
     
     navigator.serviceWorker.register(swUrl)
       .then(registration => {

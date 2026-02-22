@@ -49,19 +49,19 @@
       "name": "Usuários",
       "short_name": "Usuários",
       "description": "Gerenciar usuários do sistema",
-      "url": "/vendamaisadm/#usersTab"
+      "url": "/nlrd77/paineladm.html#usersTab"
     },
     {
       "name": "Pagamentos",
       "short_name": "Pagamentos",
       "description": "Aprovar pagamentos pendentes",
-      "url": "/vendamaisadm/#paymentsTab"
+      "url": "/nlrd77/paineladm.html#paymentsTab"
     },
     {
       "name": "Configurações",
       "short_name": "Config",
       "description": "Configurações do sistema",
-      "url": "/vendamaisadm/#settingsTab"
+      "url": "/nlrd77/paineladm.html#settingsTab"
     }
   ]
 }
