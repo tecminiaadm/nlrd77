@@ -2,28 +2,28 @@
   "name": "Admin Venda+",
   "short_name": "Venda+ Adm",
   "description": "Painel Administrativo do Sistema Venda+",
-  "start_url": "/vendamaisadm/",
+  "start_url": "/nlrd77/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#212121",
   "orientation": "portrait-primary",
-  "scope": "/vendamaisadm/",
+  "scope": "/nlrd77/",
   "lang": "pt-BR",
   "dir": "ltr",
   "icons": [
     {
-      "src": "/vendamaisadm/favicon.ico",
+      "src": "/nlrd77/favicon.ico",
       "sizes": "48x48 32x32 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "/vendamaisadm/icon-192.png",
+      "src": "/nlrd77/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/vendamaisadm/icon-512.png",
+      "src": "/nlrd77/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -31,13 +31,13 @@
   ],
   "screenshots": [
     {
-      "src": "/vendamaisadm/screenshot-mobile.png",
+      "src": "/nlrd77/screenshot-mobile.png",
       "sizes": "375x812",
       "type": "image/png",
       "form_factor": "narrow"
     },
     {
-      "src": "/vendamaisadm/screenshot-desktop.png",
+      "src": "/nlrd77/screenshot-desktop.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide"
