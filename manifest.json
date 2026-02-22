@@ -1,0 +1,67 @@
+{
+  "name": "Admin Venda+",
+  "short_name": "Venda+ Adm",
+  "description": "Painel Administrativo do Sistema Venda+",
+  "start_url": "/vendamaisadm/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#212121",
+  "orientation": "portrait-primary",
+  "scope": "/vendamaisadm/",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/vendamaisadm/favicon.ico",
+      "sizes": "48x48 32x32 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/vendamaisadm/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/vendamaisadm/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/vendamaisadm/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/vendamaisadm/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": ["business", "productivity", "finance"],
+  "shortcuts": [
+    {
+      "name": "Usuários",
+      "short_name": "Usuários",
+      "description": "Gerenciar usuários do sistema",
+      "url": "/vendamaisadm/#usersTab"
+    },
+    {
+      "name": "Pagamentos",
+      "short_name": "Pagamentos",
+      "description": "Aprovar pagamentos pendentes",
+      "url": "/vendamaisadm/#paymentsTab"
+    },
+    {
+      "name": "Configurações",
+      "short_name": "Config",
+      "description": "Configurações do sistema",
+      "url": "/vendamaisadm/#settingsTab"
+    }
+  ]
+}
