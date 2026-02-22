@@ -485,42 +485,34 @@
                 if (adminSession) {
                     const sessionData = JSON.parse(adminSession);
                     
-                    // Verifica se há um primeiro admin registrado no Firestore
+                    // Verifica se há admin configurado no Firestore
                     const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
                     
                     if (!firstAdminDoc.exists) {
-                        // Não há primeiro admin registrado ainda - limpa a sessão
                         localStorage.removeItem('adminSession');
                         await auth.signOut();
                         return;
                     }
                     
-                    const firstAdminData = firstAdminDoc.data();
-                    const firstAdminEmail = firstAdminData.email;
+                    const firstAdminEmail = firstAdminDoc.data().email;
                     
-                    // Verifica se o email da sessão corresponde ao primeiro admin
                     if (sessionData.email !== firstAdminEmail) {
-                        // Email diferente - limpa a sessão
                         localStorage.removeItem('adminSession');
                         await auth.signOut();
-                        showNotification('Acesso restrito. Somente o primeiro administrador registrado tem acesso.', 'error', 5000);
+                        showNotification('Acesso negado.', 'error', 5000);
                         return;
                     }
                     
-                    // Tenta validar com Firebase Auth
                     await auth.authStateReady();
                     const user = auth.currentUser;
                     
                     if (user && user.email === firstAdminEmail) {
-                        // Usuário válido e é o primeiro admin
                         redirectToAdminPanel();
                         return;
                     }
                     
-                    // Se chegou aqui, a sessão é inválida
                     localStorage.removeItem('adminSession');
                     await auth.signOut();
-                    
                 }
                 
                 await initializeAdminSystem();
@@ -552,59 +544,31 @@
             try {
                 setButtonLoading(true);
                 
-                // Verifica se já existe um primeiro admin
+                // Verifica se existe admin configurado via setup-admin
                 const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
                 
                 if (!firstAdminDoc.exists) {
-                    // PRIMEIRO ACESSO - cria conta
-                    try {
-                        // Cria o usuário no Firebase Auth
-                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                        const user = userCredential.user;
-                        
-                        // Salva como primeiro admin no Firestore
-                        await db.collection('admin').doc('firstAdmin').set({
-                            email: email,
-                            registeredAt: new Date().toISOString(),
-                            isActive: true,
-                            uid: user.uid
-                        });
-                        
-                        // Cria sessão
-                        await createAdminSession(user);
-                        showNotification('Primeiro administrador registrado com sucesso!', 'success');
-                        setTimeout(redirectToAdminPanel, 1000);
-                        return;
-                        
-                    } catch (createError) {
-                        handleLoginError(createError);
-                        return;
-                    }
-                } else {
-                    // JÁ EXISTE PRIMEIRO ADMIN - verifica se é o mesmo email
-                    const firstAdminData = firstAdminDoc.data();
-                    const firstAdminEmail = firstAdminData.email;
-                    
-                    if (email !== firstAdminEmail) {
-                        // Email diferente do primeiro admin - NÃO PERMITE ACESSO
-                        showNotification('Acesso restrito. Somente o primeiro administrador registrado tem acesso.', 'error');
-                        setButtonLoading(false);
-                        return;
-                    }
-                    
-                    // É o primeiro admin - faz login normal
-                    try {
-                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                        const user = userCredential.user;
-                        
-                        await createAdminSession(user);
-                        showNotification('Login realizado com sucesso!', 'success');
-                        setTimeout(redirectToAdminPanel, 1000);
-                        
-                    } catch (loginError) {
-                        handleLoginError(loginError);
-                    }
+                    showNotification('Nenhum administrador configurado. Execute o setup-admin.html primeiro.', 'error', 6000);
+                    setButtonLoading(false);
+                    return;
                 }
+                
+                const firstAdminEmail = firstAdminDoc.data().email;
+                
+                // Bloqueia qualquer email diferente do admin cadastrado
+                if (email !== firstAdminEmail) {
+                    showNotification('Acesso negado. Credenciais inválidas.', 'error');
+                    setButtonLoading(false);
+                    return;
+                }
+                
+                // Email correto — autentica no Firebase
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                await createAdminSession(user);
+                showNotification('Login realizado com sucesso!', 'success');
+                setTimeout(redirectToAdminPanel, 1000);
                 
             } catch (error) {
                 handleLoginError(error);
@@ -615,48 +579,34 @@
             try {
                 setButtonLoading(true);
                 const provider = new firebase.auth.GoogleAuthProvider();
-                provider.setCustomParameters({ 
-                    prompt: 'select_account',
-                    login_hint: '' 
-                });
+                provider.setCustomParameters({ prompt: 'select_account' });
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
                 
-                // Verifica se já existe um primeiro admin
+                // Verifica se existe admin configurado via setup-admin
                 const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
                 
                 if (!firstAdminDoc.exists) {
-                    // PRIMEIRO ACESSO - salva como primeiro admin
-                    await db.collection('admin').doc('firstAdmin').set({
-                        email: user.email,
-                        registeredAt: new Date().toISOString(),
-                        isActive: true,
-                        uid: user.uid,
-                        loginMethod: 'google'
-                    });
-                    
-                    await createAdminSession(user);
-                    showNotification('Primeiro administrador registrado com sucesso!', 'success');
-                    setTimeout(redirectToAdminPanel, 1000);
-                    
-                } else {
-                    // JÁ EXISTE PRIMEIRO ADMIN - verifica se é o mesmo email
-                    const firstAdminData = firstAdminDoc.data();
-                    const firstAdminEmail = firstAdminData.email;
-                    
-                    if (user.email !== firstAdminEmail) {
-                        // Email diferente - NÃO PERMITE ACESSO
-                        await auth.signOut();
-                        showNotification('Acesso restrito. Somente o primeiro administrador registrado tem acesso.', 'error');
-                        setButtonLoading(false);
-                        return;
-                    }
-                    
-                    // É o primeiro admin - cria sessão
-                    await createAdminSession(user);
-                    showNotification('Login realizado com sucesso!', 'success');
-                    setTimeout(redirectToAdminPanel, 1000);
+                    await auth.signOut();
+                    showNotification('Nenhum administrador configurado. Execute o setup-admin.html primeiro.', 'error', 6000);
+                    setButtonLoading(false);
+                    return;
                 }
+                
+                const firstAdminEmail = firstAdminDoc.data().email;
+                
+                // Bloqueia qualquer conta Google diferente do admin cadastrado
+                if (user.email !== firstAdminEmail) {
+                    await auth.signOut();
+                    showNotification('Acesso negado. Esta conta Google não tem permissão.', 'error');
+                    setButtonLoading(false);
+                    return;
+                }
+                
+                // Conta correta — cria sessão
+                await createAdminSession(user);
+                showNotification('Login realizado com sucesso!', 'success');
+                setTimeout(redirectToAdminPanel, 1000);
                 
             } catch (error) {
                 handleLoginError(error);
@@ -774,18 +724,21 @@
             try {
                 const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
                 if (!firstAdminDoc.exists) {
-                    console.log('Sistema pronto para registro do primeiro administrador');
-                } else {
-                    const firstAdminData = firstAdminDoc.data();
-                    console.log('Primeiro administrador registrado:', firstAdminData.email);
-                    
-                    // Opcional: Preenche automaticamente o campo de email
-                    document.getElementById('email').value = firstAdminData.email;
-                    document.getElementById('email').readOnly = true;
-                    document.getElementById('email').style.backgroundColor = '#f0f0f0';
+                    // Nenhum admin configurado — exibe aviso no rodapé
+                    const footer = document.querySelector('.form-footer p');
+                    if (footer) {
+                        footer.innerHTML = '⚠️ Nenhum administrador configurado.<br>Execute o <strong>setup-admin.html</strong> primeiro.';
+                        footer.style.color = '#f59e0b';
+                        footer.style.fontWeight = '500';
+                    }
+                    // Desabilita o formulário até o setup ser feito
+                    document.getElementById('loginBtn').disabled = true;
+                    document.getElementById('googleLoginBtn').disabled = true;
+                    document.getElementById('googleLoginBtn').style.opacity = '0.4';
+                    showNotification('Configure o administrador via setup-admin.html antes de fazer login.', 'warning', 8000);
                 }
             } catch (error) {
-                console.warn('Não foi possível inicializar sistema admin:', error);
+                console.warn('Não foi possível verificar configuração admin:', error);
             }
         }
         

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Setup Admin — Painel Administrativo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #161b27;
+      --surface2: #1e2535;
+      --border: rgba(255,255,255,0.08);
+      --accent: #4a6cf7;
+      --accent2: #7c3aed;
+      --text: #f0f2f5;
+      --muted: #8892a4;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 15% 15%, rgba(74,108,247,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 70% at 85% 85%, rgba(124,58,237,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 480px;
+    }
+
+    /* Brand */
+    .brand {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: slideDown 0.6s cubic-bezier(.22,1,.36,1);
+    }
+    .brand-icon {
+      width: 68px; height: 68px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 30px;
+      box-shadow: 0 10px 40px rgba(74,108,247,0.35);
+    }
+    .brand h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem; font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand p { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+
+    /* Warning box */
+    .warning-box {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex; gap: 12px; align-items: flex-start;
+      font-size: 0.85rem; color: var(--warning);
+      line-height: 1.5;
+      animation: slideDown 0.6s cubic-bezier(.22,1,.36,1) 0.05s both;
+    }
+    .warning-box .icon { font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      animation: slideUp 0.6s cubic-bezier(.22,1,.36,1) 0.1s both;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem; font-weight: 700;
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-title .step-badge {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 800; color: white; flex-shrink: 0;
+    }
+    .card-subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; padding-left: 38px; }
+
+    /* Divider */
+    .divider {
+      height: 1px; background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* Form */
+    .form-group { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--muted); margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%; padding: 13px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; outline: none;
+      transition: all 0.25s ease;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,108,247,0.15); }
+    input::placeholder { color: #3a4455; }
+    input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Password wrapper */
+    .password-wrapper { position: relative; }
+    .password-wrapper input { padding-right: 46px; }
+    .toggle-pw {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1rem;
+      transition: color 0.2s;
+      padding: 4px;
+    }
+    .toggle-pw:hover { color: var(--accent); }
+
+    /* Buttons */
+    .btn {
+      width: 100%; padding: 14px;
+      border: none; border-radius: 12px;
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.95rem; cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; letter-spacing: 0.2px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      box-shadow: 0 4px 20px rgba(74,108,247,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(74,108,247,0.45); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert */
+    .alert {
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 0.86rem; margin-bottom: 16px;
+      display: none; align-items: flex-start; gap: 10px;
+      line-height: 1.5;
+    }
+    .alert.show { display: flex; }
+    .alert.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+    .alert.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; }
+    .alert.info { background: rgba(74,108,247,0.1); border: 1px solid rgba(74,108,247,0.2); color: #a5b4fc; }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step-block { padding-bottom: 24px; }
+    .step-block:last-child { padding-bottom: 0; }
+
+    /* Success screen */
+    .success-screen {
+      display: none; text-align: center; padding: 10px 0;
+    }
+    .success-screen .check-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 2rem;
+      box-shadow: 0 8px 30px rgba(16,185,129,0.35);
+      animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from { transform: scale(0); opacity:0; } to { transform: scale(1); opacity:1; } }
+    .success-screen h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
+    .success-screen p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 6px; }
+    .success-screen .info-pill {
+      display: inline-block; background: rgba(74,108,247,0.1);
+      border: 1px solid rgba(74,108,247,0.25);
+      color: #a5b4fc; border-radius: 20px;
+      padding: 4px 14px; font-size: 0.8rem; font-weight: 600;
+      margin: 4px 0 20px;
+    }
+
+    /* Firebase info */
+    .firebase-info {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 0.8rem; color: var(--muted);
+      margin-top: 16px;
+      display: flex; gap: 8px; align-items: flex-start; line-height: 1.5;
+    }
+    .firebase-info .icon { color: var(--warning); font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+
+    @keyframes slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="brand">
+    <div class="brand-icon">🛡️</div>
+    <h1>Painel Administrativo</h1>
+    <p>Configuração inicial do Super Administrador</p>
+  </div>
+
+  <div class="warning-box">
+    <span class="icon">⚠️</span>
+    <span>Execute esta página <strong>apenas uma vez</strong>, na primeira configuração do sistema. Após criar o administrador, delete ou proteja este arquivo.</span>
+  </div>
+
+  <!-- MAIN CARD -->
+  <div class="card" id="mainCard">
+
+    <!-- Alert -->
+    <div class="alert" id="alertBox">
+      <span id="alertIcon">⚠</span>
+      <span id="alertMsg"></span>
+    </div>
+
+    <!-- FORM -->
+    <div id="formView">
+      <div class="steps">
+
+        <!-- Step 1: Admin info -->
+        <div class="step-block">
+          <div class="card-title">
+            <div class="step-badge">1</div>
+            Dados do Administrador
+          </div>
+          <div class="card-subtitle">Conta que terá acesso total ao painel administrativo.</div>
+
+          <div class="form-group">
+            <label>Nome completo</label>
+            <input type="text" id="adminNome" placeholder="Ex: João Silva" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="adminEmail" placeholder="admin@seudominio.com" />
+          </div>
+          <div class="form-group">
+            <label>Senha (mín. 6 caracteres)</label>
+            <div class="password-wrapper">
+              <input type="password" id="adminSenha" placeholder="••••••••" />
+              <button type="button" class="toggle-pw" onclick="togglePassword('adminSenha', this)">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirmar senha</label>
+            <div class="password-wrapper">
+              <input type="password" id="adminSenhaConfirm" placeholder="••••••••" />
+              <button type="button" class="toggle-pw" onclick="togglePassword('adminSenhaConfirm', this)">👁</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn btn-primary" id="btnSetup" onclick="executarSetup()">
+      <div class="spinner" id="spinner"></div>
+      <span id="btnText">🚀 Criar Super Administrador</span>
+    </button>
+
+    <div class="firebase-info">
+      <span class="icon">🔥</span>
+      <span>Esta página irá criar a conta no <strong>Firebase Authentication</strong> e registrar o documento <strong>admin/firstAdmin</strong> no Firestore automaticamente.</span>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successView">
+    <div class="check-icon">✅</div>
+    <h2>Admin Configurado!</h2>
+    <p>A conta de super administrador foi criada com sucesso.</p>
+    <div class="info-pill" id="successEmail"></div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:24px;">
+      ⚠️ <strong>Importante:</strong> por segurança, delete ou remova o acesso público ao arquivo <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;">setup-admin.html</code> agora.
+    </p>
+    <a href="login.html" style="text-decoration:none;">
+      <button class="btn btn-primary" style="width:100%">
+        🔐 Ir para o Login
+      </button>
+    </a>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+  // ===== FIREBASE CONFIG — mesmo projeto do login.html =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyB7U-JfKAlkPxSyL4AEf5u0BgcDzSXf41M",
+    authDomain: "appvendas-1eebf.firebaseapp.com",
+    projectId: "appvendas-1eebf",
+    storageBucket: "appvendas-1eebf.firebasestorage.app",
+    messagingSenderId: "229472373918",
+    appId: "1:229472373918:web:39cd4940b052b2375f3f8f"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Verifica se já existe admin ao carregar
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
+      if (firstAdminDoc.exists && firstAdminDoc.data().email) {
+        showAlert('info', `ℹ️ Um administrador já foi configurado (${firstAdminDoc.data().email}). Execute este setup apenas uma vez.`);
+      }
+    } catch(e) {
+      // Sem permissão ainda — normal antes do primeiro setup
+    }
+  });
+
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+  }
+
+  function showAlert(type, msg) {
+    const box = document.getElementById('alertBox');
+    const msgEl = document.getElementById('alertMsg');
+    const icon = document.getElementById('alertIcon');
+    msgEl.textContent = msg;
+    icon.textContent = type === 'error' ? '⚠' : type === 'success' ? '✓' : 'ℹ';
+    box.className = `alert ${type} show`;
+  }
+
+  function hideAlert() {
+    document.getElementById('alertBox').className = 'alert';
+  }
+
+  function setLoading(loading) {
+    document.getElementById('btnSetup').disabled = loading;
+    document.getElementById('spinner').style.display = loading ? 'block' : 'none';
+    document.getElementById('btnText').textContent = loading ? 'Configurando...' : '🚀 Criar Super Administrador';
+    document.querySelectorAll('input').forEach(i => i.disabled = loading);
+  }
+
+  async function executarSetup() {
+    hideAlert();
+
+    const nome = document.getElementById('adminNome').value.trim();
+    const email = document.getElementById('adminEmail').value.trim();
+    const senha = document.getElementById('adminSenha').value;
+    const senhaConfirm = document.getElementById('adminSenhaConfirm').value;
+
+    // Validações
+    if (!nome) { showAlert('error', 'Informe o nome do administrador.'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('error', 'Informe um email válido.'); return; }
+    if (!senha || senha.length < 6) { showAlert('error', 'A senha deve ter ao menos 6 caracteres.'); return; }
+    if (senha !== senhaConfirm) { showAlert('error', 'As senhas não coincidem.'); return; }
+
+    setLoading(true);
+
+    try {
+      // 1. Cria o usuário no Firebase Auth
+      let uid;
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, senha);
+        uid = cred.user.uid;
+        await cred.user.updateProfile({ displayName: nome });
+      } catch (authErr) {
+        if (authErr.code === 'auth/email-already-in-use') {
+          // Usuário já existe — faz login para obter UID e promover
+          const cred = await auth.signInWithEmailAndPassword(email, senha);
+          uid = cred.user.uid;
+        } else {
+          throw authErr;
+        }
+      }
+
+      // 2. Salva o documento admin/firstAdmin no Firestore
+      //    (mesma estrutura esperada pelo login.html)
+      await db.collection('admin').doc('firstAdmin').set({
+        email: email,
+        nome: nome,
+        uid: uid,
+        registeredAt: new Date().toISOString(),
+        isActive: true,
+        role: 'superadmin'
+      });
+
+      // 3. Faz logout — o acesso será feito pelo login.html
+      await auth.signOut();
+
+      // 4. Exibe tela de sucesso
+      document.getElementById('successEmail').textContent = email;
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('btnSetup').style.display = 'none';
+      document.querySelector('.firebase-info').style.display = 'none';
+      document.getElementById('successView').style.display = 'block';
+
+    } catch (e) {
+      console.error(e);
+      const errorMsgs = {
+        'auth/weak-password': 'Senha muito fraca. Use ao menos 6 caracteres.',
+        'auth/invalid-email': 'Email inválido.',
+        'auth/operation-not-allowed': 'Login com email/senha não está habilitado no Firebase. Ative nas configurações do projeto.',
+        'auth/network-request-failed': 'Erro de rede. Verifique sua conexão.',
+        'permission-denied': 'Permissão negada. Verifique as regras do Firestore.'
+      };
+      showAlert('error', errorMsgs[e.code] || `Erro: ${e.message}`);
+      setLoading(false);
+      document.querySelectorAll('input').forEach(i => i.disabled = false);
+    }
+  }
+
+  // Suporte a tecla Enter
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !document.getElementById('btnSetup').disabled) {
+      executarSetup();
+    }
+  });
+</script>
+</body>
+</html>
