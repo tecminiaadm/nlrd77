@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Adm</title>
+    <script>
+(function () {
+    try {
+        const raw = localStorage.getItem('adminSession');
+        if (!raw) {
+            location.replace('login.html');
+            return;
+        }
+
+        const data = JSON.parse(raw);
+        if (!data.timestamp) {
+            localStorage.removeItem('adminSession');
+            location.replace('login.html');
+            return;
+        }
+
+        const timestamp = new Date(data.timestamp).getTime();
+        if (!timestamp) {
+            localStorage.removeItem('adminSession');
+            location.replace('login.html');
+            return;
+        }
+
+        const maxAge = 8 * 60 * 60 * 1000;
+        if (Date.now() - timestamp <= maxAge) {
+            // Redireciona DIRETAMENTE para paineladm.html se já logado
+            location.replace('paineladm.html');
+        } else {
+            localStorage.removeItem('adminSession');
+            location.replace('login.html');
+        }
+
+    } catch {
+        location.replace('login.html');
+    }
+})();
+    </script>
+</head>
+<body>
+    <p>Redirecionando...</p>
+</body>
+</html>

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login | Administrativo</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --primary-gradient: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+            --accent-color: #4a6cf7;
+            --accent-hover: #3a5ce5;
+            --secondary-color: #ffffff;
+            --text-color: #2d3748;
+            --text-light: #718096;
+            --background-light: #f8fafc;
+            --background-gray: #f1f5f9;
+            --border-color: #e2e8f0;
+            --shadow-light: 0 10px 30px rgba(0,0,0,0.08);
+            --shadow-medium: 0 15px 40px rgba(0,0,0,0.12);
+            --shadow-hover: 0 20px 50px rgba(0,0,0,0.15);
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: var(--background-light);
+            color: var(--text-color);
+        }
+        body {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(74, 108, 247, 0.08) 0%, transparent 55%),
+                radial-gradient(circle at 85% 30%, rgba(74, 108, 247, 0.05) 0%, transparent 55%);
+            z-index: -1;
+        }
+        .admin-login-container {
+            max-width: 420px;
+            width: 100%;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius-lg);
+            padding: 50px 40px;
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+        .admin-login-container:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        .admin-login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--primary-gradient);
+            z-index: 2;
+        }
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .logo-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-gradient);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(26, 26, 26, 0.15);
+            transition: var(--transition);
+        }
+        .logo-icon-wrapper:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(26, 26, 26, 0.2);
+        }
+        .logo-icon {
+            font-size: 2.8rem;
+            color: var(--secondary-color);
+        }
+        .logo-section h1 {
+            font-size: 2.1rem;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo-section p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .login-form {
+            margin-top: 10px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-label i {
+            color: var(--accent-color);
+            font-size: 1rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--background-gray);
+            color: var(--text-color);
+            font-weight: 400;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: var(--secondary-color);
+            box-shadow: 0 0 0 4px rgba(74, 108, 247, 0.1);
+        }
+        .form-input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        .btn {
+            padding: 18px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+        }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.1), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .btn:hover::after {
+            opacity: 1;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-login {
+            background: var(--primary-gradient);
+            color: var(--secondary-color);
+            box-shadow: 0 8px 20px rgba(26, 26, 26, 0.2);
+        }
+        .btn-login:hover {
+            background: linear-gradient(135deg, #333333 0%, #1a1a1a 100%);
+            box-shadow: 0 12px 30px rgba(26, 26, 26, 0.3);
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-google {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-top: 16px;
+        }
+        .btn-google:hover {
+            background-color: #f8fafc;
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+        .divider span {
+            padding: 0 15px;
+        }
+        .form-footer {
+            text-align: center;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            padding: 20px 28px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: fadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 500;
+            color: white;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            backdrop-filter: blur(10px);
+            border: none;
+        }
+        .notification.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        .notification.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        .notification.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translate(-50%,-50%) scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translate(-50%,-50%) scale(1); 
+            }
+        }
+        @keyframes fadeOut {
+            from { 
+                opacity: 1; 
+                transform: translate(-50%,-50%) scale(1); 
+            }
+            to { 
+                opacity: 0; 
+                transform: translate(-50%,-50%) scale(0.9); 
+            }
+        }
+        .loading {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 480px) {
+            .admin-login-container {
+                padding: 40px 28px;
+                margin: 10px;
+                border-radius: 20px;
+            }
+            .logo-section h1 {
+                font-size: 1.9rem;
+            }
+            .logo-icon-wrapper {
+                width: 70px;
+                height: 70px;
+            }
+            .logo-icon {
+                font-size: 2.4rem;
+            }
+            .btn {
+                padding: 16px 20px;
+            }
+            body {
+                padding: 15px;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        .btn:focus-visible,
+        .form-input:focus-visible {
+            outline: 3px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+        .notification {
+            user-select: text;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 42px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .password-toggle:hover {
+            color: var(--accent-color);
+            background: rgba(0,0,0,0.05);
+        }
+    </style>
+    <!-- PWA Configuration -->
+<link rel="manifest" href="pwa/manifest.json">
+<meta name="theme-color" content="#212121">
+
+<!-- iOS PWA Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Venda+ Adm">
+<link rel="apple-touch-icon" href="favicon.ico">
+
+<!-- Android PWA Support -->
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- PWA Install Prompt -->
+<meta name="application-name" content="Venda+ Adm">
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="logo-section">
+            <div class="logo-icon-wrapper">
+                <i class="fas fa-user-shield logo-icon"></i>
+            </div>
+            <h1>Painel Administrativo</h1>
+            <p>Acesso exclusivo para administradores autorizados</p>
+        </div>
+        
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    <i class="fas fa-envelope"></i> E-mail
+                </label>
+                <input type="email" id="email" class="form-input" placeholder="seu.email@dominio.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="password">
+                    <i class="fas fa-lock"></i> Senha
+                </label>
+                <input type="password" id="password" class="form-input" placeholder="Digite sua senha" required minlength="6">
+                <button type="button" class="password-toggle" id="passwordToggle" aria-label="Mostrar senha">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            
+            <button type="submit" class="btn btn-login" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
+            
+            <div class="divider">
+                <span>Ou continue com</span>
+            </div>
+            
+            <button type="button" class="btn btn-google" id="googleLoginBtn" aria-label="Entrar com Google">
+                <i class="fab fa-google"></i> Entrar com Google
+            </button>
+        </form>
+        
+        <div class="form-footer">
+            <p>Acesso restrito ao primeiro administrador registrado</p>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7U-JfKAlkPxSyL4AEf5u0BgcDzSXf41M",
+            authDomain: "appvendas-1eebf.firebaseapp.com",
+            projectId: "appvendas-1eebf",
+            storageBucket: "appvendas-1eebf.firebasestorage.app",
+            messagingSenderId: "229472373918",
+            appId: "1:229472373918:web:39cd4940b052b2375f3f8f"
+        };
+        
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordInput = document.getElementById('password');
+        
+        // Toggle password visibility
+        passwordToggle.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const adminSession = localStorage.getItem('adminSession');
+                if (adminSession) {
+                    const sessionData = JSON.parse(adminSession);
+                    
+                    // Verifica se há um primeiro admin registrado no Firestore
+                    const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
+                    
+                    if (!firstAdminDoc.exists) {
+                        // Não há primeiro admin registrado ainda - limpa a sessão
+                        localStorage.removeItem('adminSession');
+                        await auth.signOut();
+                        return;
+                    }
+                    
+                    const firstAdminData = firstAdminDoc.data();
+                    const firstAdminEmail = firstAdminData.email;
+                    
+                    // Verifica se o email da sessão corresponde ao primeiro admin
+                    if (sessionData.email !== firstAdminEmail) {
+                        // Email diferente - limpa a sessão
+                        localStorage.removeItem('adminSession');
+                        await auth.signOut();
+                        showNotification('Acesso restrito. Somente o primeiro administrador registrado tem acesso.', 'error', 5000);
+                        return;
+                    }
+                    
+                    // Tenta validar com Firebase Auth
+                    await auth.authStateReady();
+                    const user = auth.currentUser;
+                    
+                    if (user && user.email === firstAdminEmail) {
+                        // Usuário válido e é o primeiro admin
+                        redirectToAdminPanel();
+                        return;
+                    }
+                    
+                    // Se chegou aqui, a sessão é inválida
+                    localStorage.removeItem('adminSession');
+                    await auth.signOut();
+                    
+                }
+                
+                await initializeAdminSystem();
+            } catch (error) {
+                console.error('Erro ao inicializar:', error);
+                showNotification('Erro ao carregar o sistema', 'error', 5000);
+            }
+        });
+        
+        loginForm.addEventListener('submit', handleEmailLogin);
+        googleLoginBtn.addEventListener('click', handleGoogleLogin);
+        
+        async function handleEmailLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showNotification('Preencha todos os campos', 'error');
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                showNotification('Por favor, insira um e-mail válido', 'error');
+                return;
+            }
+            
+            try {
+                setButtonLoading(true);
+                
+                // Verifica se já existe um primeiro admin
+                const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
+                
+                if (!firstAdminDoc.exists) {
+                    // PRIMEIRO ACESSO - cria conta
+                    try {
+                        // Cria o usuário no Firebase Auth
+                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
+                        
+                        // Salva como primeiro admin no Firestore
+                        await db.collection('admin').doc('firstAdmin').set({
+                            email: email,
+                            registeredAt: new Date().toISOString(),
+                            isActive: true,
+                            uid: user.uid
+                        });
+                        
+                        // Cria sessão
+                        await createAdminSession(user);
+                        showNotification('Primeiro administrador registrado com sucesso!', 'success');
+                        setTimeout(redirectToAdminPanel, 1000);
+                        return;
+                        
+                    } catch (createError) {
+                        handleLoginError(createError);
+                        return;
+                    }
+                } else {
+                    // JÁ EXISTE PRIMEIRO ADMIN - verifica se é o mesmo email
+                    const firstAdminData = firstAdminDoc.data();
+                    const firstAdminEmail = firstAdminData.email;
+                    
+                    if (email !== firstAdminEmail) {
+                        // Email diferente do primeiro admin - NÃO PERMITE ACESSO
+                        showNotification('Acesso restrito. Somente o primeiro administrador registrado tem acesso.', 'error');
+                        setButtonLoading(false);
+                        return;
+                    }
+                    
+                    // É o primeiro admin - faz login normal
+                    try {
+                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
+                        
+                        await createAdminSession(user);
+                        showNotification('Login realizado com sucesso!', 'success');
+                        setTimeout(redirectToAdminPanel, 1000);
+                        
+                    } catch (loginError) {
+                        handleLoginError(loginError);
+                    }
+                }
+                
+            } catch (error) {
+                handleLoginError(error);
+            }
+        }
+        
+        async function handleGoogleLogin() {
+            try {
+                setButtonLoading(true);
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ 
+                    prompt: 'select_account',
+                    login_hint: '' 
+                });
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                
+                // Verifica se já existe um primeiro admin
+                const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
+                
+                if (!firstAdminDoc.exists) {
+                    // PRIMEIRO ACESSO - salva como primeiro admin
+                    await db.collection('admin').doc('firstAdmin').set({
+                        email: user.email,
+                        registeredAt: new Date().toISOString(),
+                        isActive: true,
+                        uid: user.uid,
+                        loginMethod: 'google'
+                    });
+                    
+                    await createAdminSession(user);
+                    showNotification('Primeiro administrador registrado com sucesso!', 'success');
+                    setTimeout(redirectToAdminPanel, 1000);
+                    
+                } else {
+                    // JÁ EXISTE PRIMEIRO ADMIN - verifica se é o mesmo email
+                    const firstAdminData = firstAdminDoc.data();
+                    const firstAdminEmail = firstAdminData.email;
+                    
+                    if (user.email !== firstAdminEmail) {
+                        // Email diferente - NÃO PERMITE ACESSO
+                        await auth.signOut();
+                        showNotification('Acesso restrito. Somente o primeiro administrador registrado tem acesso.', 'error');
+                        setButtonLoading(false);
+                        return;
+                    }
+                    
+                    // É o primeiro admin - cria sessão
+                    await createAdminSession(user);
+                    showNotification('Login realizado com sucesso!', 'success');
+                    setTimeout(redirectToAdminPanel, 1000);
+                }
+                
+            } catch (error) {
+                handleLoginError(error);
+            }
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        async function createAdminSession(user) {
+            const adminSession = {
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName || user.email.split('@')[0],
+                photoURL: user.photoURL,
+                loggedIn: true,
+                timestamp: new Date().toISOString(),
+                sessionId: generateSessionId(),
+                loginMethod: user.providerData?.[0]?.providerId || 'email'
+            };
+            localStorage.setItem('adminSession', JSON.stringify(adminSession));
+        }
+        
+        function handleLoginError(error) {
+            console.error('Erro no login:', error);
+            let errorMessage = 'Erro ao fazer login.';
+            let errorType = 'error';
+            
+            switch (error.code) {
+                case 'auth/invalid-email':
+                    errorMessage = 'E-mail inválido.';
+                    break;
+                case 'auth/user-disabled':
+                    errorMessage = 'Esta conta foi desativada.';
+                    break;
+                case 'auth/user-not-found':
+                    errorMessage = 'Usuário não encontrado.';
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Senha incorreta.';
+                    break;
+                case 'auth/email-already-in-use':
+                    errorMessage = 'Este e-mail já está em uso.';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
+                    break;
+                case 'auth/popup-closed-by-user':
+                    errorMessage = 'Login cancelado.';
+                    errorType = 'warning';
+                    break;
+                case 'auth/popup-blocked':
+                    errorMessage = 'Pop-up bloqueado. Por favor, permita pop-ups para este site.';
+                    break;
+                case 'auth/network-request-failed':
+                    errorMessage = 'Erro de conexão. Verifique sua internet.';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Muitas tentativas de login. Tente novamente mais tarde.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'Este método de login não está disponível.';
+                    break;
+            }
+            
+            showNotification(errorMessage, errorType);
+            setButtonLoading(false);
+        }
+        
+        function setButtonLoading(isLoading) {
+            if (isLoading) {
+                loginBtn.innerHTML = '<div class="loading"></div> Processando...';
+                loginBtn.disabled = true;
+                googleLoginBtn.disabled = true;
+                googleLoginBtn.style.opacity = '0.6';
+            } else {
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+                loginBtn.disabled = false;
+                googleLoginBtn.disabled = false;
+                googleLoginBtn.style.opacity = '1';
+            }
+        }
+        
+        function showNotification(message, type = 'info', duration = 3000) {
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.setAttribute('role', 'alert');
+            notification.setAttribute('aria-live', 'assertive');
+            
+            let icon = '';
+            switch(type) {
+                case 'success': icon = '<i class="fas fa-check-circle"></i>'; break;
+                case 'error': icon = '<i class="fas fa-exclamation-circle"></i>'; break;
+                case 'warning': icon = '<i class="fas fa-exclamation-triangle"></i>'; break;
+                default: icon = '<i class="fas fa-info-circle"></i>';
+            }
+            
+            notification.innerHTML = `${icon}<span>${message}</span>`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) notification.remove();
+                }, 300);
+            }, duration);
+        }
+        
+        async function initializeAdminSystem() {
+            try {
+                const firstAdminDoc = await db.collection('admin').doc('firstAdmin').get();
+                if (!firstAdminDoc.exists) {
+                    console.log('Sistema pronto para registro do primeiro administrador');
+                } else {
+                    const firstAdminData = firstAdminDoc.data();
+                    console.log('Primeiro administrador registrado:', firstAdminData.email);
+                    
+                    // Opcional: Preenche automaticamente o campo de email
+                    document.getElementById('email').value = firstAdminData.email;
+                    document.getElementById('email').readOnly = true;
+                    document.getElementById('email').style.backgroundColor = '#f0f0f0';
+                }
+            } catch (error) {
+                console.warn('Não foi possível inicializar sistema admin:', error);
+            }
+        }
+        
+        function redirectToAdminPanel() {
+            window.location.replace('index.html');
+        }
+        
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 12);
+        }
+        
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('Usuário autenticado:', user.email);
+            } else {
+                console.log('Nenhum usuário autenticado');
+            }
+        });
+        
+        // Prevent form resubmission on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
+    <script>
+// ========== PWA INSTALLATION HANDLER ==========
+let deferredPrompt;
+const installButton = document.createElement('button');
+
+// Detecta quando o app pode ser instalado
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // Mostra botão de instalação se não estiver já instalado
+  if (!window.matchMedia('(display-mode: standalone)').matches) {
+    showInstallPromotion();
+  }
+});
+
+// Quando o app é instalado
+window.addEventListener('appinstalled', () => {
+  console.log('PWA instalado com sucesso!');
+  deferredPrompt = null;
+  
+  // Remove o botão de instalação
+  if (installButton.parentNode) {
+    installButton.parentNode.removeChild(installButton);
+  }
+});
+
+// Mostra promoção de instalação
+function showInstallPromotion() {
+  installButton.innerHTML = '<i class="fas fa-download"></i> Instalar App';
+  installButton.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slideUp 0.3s ease;
+  `;
+  
+  installButton.onclick = installPWA;
+  document.body.appendChild(installButton);
+  
+  // Remove automaticamente após 30 segundos
+  setTimeout(() => {
+    if (installButton.parentNode) {
+      installButton.style.opacity = '0';
+      setTimeout(() => {
+        if (installButton.parentNode) {
+          installButton.parentNode.removeChild(installButton);
+        }
+      }, 300);
+    }
+  }, 30000);
+}
+
+// Instala o PWA
+function installPWA() {
+  if (!deferredPrompt) return;
+  
+  deferredPrompt.prompt();
+  
+  deferredPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      console.log('Usuário aceitou instalação');
+    } else {
+      console.log('Usuário recusou instalação');
+    }
+    deferredPrompt = null;
+  });
+}
+
+// ========== SERVICE WORKER REGISTRATION ==========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swUrl = 'pwa/sw.js';
+    
+    navigator.serviceWorker.register(swUrl)
+      .then(registration => {
+        console.log('Service Worker registrado:', registration);
+        
+        // Verifica atualizações periodicamente
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000); // A cada hora
+        
+        // Escuta por nova versão
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('Nova versão do Service Worker encontrada');
+        });
+      })
+      .catch(error => {
+        console.error('Erro no Service Worker:', error);
+      });
+  });
+}
+
+// ========== PWA UTILITIES ==========
+
+// Verifica se está rodando como PWA
+function isRunningAsPWA() {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         window.navigator.standalone ||
+         document.referrer.includes('android-app://');
+}
+
+// Detecta modo de display
+if (isRunningAsPWA()) {
+  console.log('Rodando como PWA instalado');
+  document.documentElement.classList.add('pwa-mode');
+  
+  // Otimizações para PWA
+  if ('connection' in navigator && navigator.connection.saveData === true) {
+    console.log('Modo dados economizados ativado');
+  }
+} else {
+  console.log('Rodando no navegador');
+}
+
+// ========== OFFLINE DETECTION ==========
+function updateOnlineStatus() {
+  const status = navigator.onLine ? 'online' : 'offline';
+  document.documentElement.setAttribute('data-network', status);
+  
+  // Mostra notificação de status
+  if (status === 'offline') {
+    showOfflineNotification();
+  }
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+function showOfflineNotification() {
+  const notification = document.createElement('div');
+  notification.innerHTML = '<i class="fas fa-wifi-slash"></i> Modo offline';
+  notification.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: var(--warning-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+  `;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
+}
+</script>
+</body>
+</html>
