@@ -412,6 +412,28 @@
         </div>
     </div>
     
+    <!-- Modal de Exclusão Definitiva de Conta -->
+    <div class="modal" id="deleteUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" style="color: var(--danger-color);"><i class="fas fa-exclamation-triangle"></i> Excluir Conta</h2>
+                <button class="modal-close" id="closeDeleteUserModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 12px;">Você está prestes a <strong>excluir definitivamente</strong> esta conta e todos os seus dados. Esta ação <strong>não pode ser desfeita</strong>.</p>
+                <div id="deleteUserInfo" style="background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.9rem;"></div>
+                <div class="confirmation-text">
+                    <strong>Digite "EXCLUIR" para confirmar:</strong>
+                    <input type="text" id="deleteUserConfirmInput" class="form-input mt-1" placeholder="Digite EXCLUIR">
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button type="button" class="submit-btn" style="background: #757575;" id="cancelDeleteUserBtn">Cancelar</button>
+                    <button type="button" class="submit-btn" style="background: var(--danger-color);" id="confirmDeleteUserBtn" disabled><i class="fas fa-trash-alt"></i> Excluir Definitivamente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">Carregando...</div>
@@ -444,6 +466,7 @@
         let payments = [];
         let systemConfig = {};
         let currentPaymentToDelete = null;
+        let currentUserToDelete = null;
         let lastUpdateTime = null;
         
         // Image viewer state
@@ -494,6 +517,13 @@
         const cancelDeleteBtn = $('cancelDeleteBtn');
         const confirmDeleteBtn = $('confirmDeleteBtn');
         const confirmationInput = $('confirmationInput');
+        
+        const deleteUserModal = $('deleteUserModal');
+        const closeDeleteUserModal = $('closeDeleteUserModal');
+        const cancelDeleteUserBtn = $('cancelDeleteUserBtn');
+        const confirmDeleteUserBtn = $('confirmDeleteUserBtn');
+        const deleteUserConfirmInput = $('deleteUserConfirmInput');
+        const deleteUserInfo = $('deleteUserInfo');
         
         const loadingOverlay = $('loadingOverlay');
 
@@ -922,6 +952,7 @@
                         ` : `
                             <button class="action-btn btn-activate" data-id="${user.id}" data-action="activate"><i class="fas fa-check"></i> Ativar</button>
                         `}
+                        <button class="action-btn btn-delete" data-id="${user.id}" data-action="delete-user" style="background: rgba(244,67,54,0.1); color: var(--danger-color);"><i class="fas fa-trash-alt"></i> Excluir</button>
                     </div>
                 `;
                 
@@ -957,6 +988,8 @@
                 toggleUserStatus(id, 'blocked');
             } else if (action === 'activate') {
                 toggleUserStatus(id, 'active');
+            } else if (action === 'delete-user') {
+                showDeleteUserConfirmation(id);
             }
         }
 
@@ -1104,6 +1137,7 @@
                 if (e.target === userDetailsModal) userDetailsModal.style.display = 'none';
                 if (e.target === paymentDetailsModal) paymentDetailsModal.style.display = 'none';
                 if (e.target === deleteConfirmationModal) closeDeleteModalHandler();
+                if (e.target === deleteUserModal) closeDeleteUserModalHandler();
                 if (e.target === imageViewer) imageViewer.style.display = 'none';
             });
             
@@ -1112,6 +1146,14 @@
             });
             
             confirmDeleteBtn.addEventListener('click', deletePayment);
+            
+            // Exclusão de conta de usuário
+            closeDeleteUserModal.addEventListener('click', closeDeleteUserModalHandler);
+            cancelDeleteUserBtn.addEventListener('click', closeDeleteUserModalHandler);
+            deleteUserConfirmInput.addEventListener('input', function() {
+                confirmDeleteUserBtn.disabled = this.value !== 'EXCLUIR';
+            });
+            confirmDeleteUserBtn.addEventListener('click', deleteUser);
             
             if (adminWhatsAppInput) {
                 new IMask(adminWhatsAppInput, { 
@@ -1164,6 +1206,77 @@
             confirmationInput.value = '';
             confirmDeleteBtn.disabled = true;
             currentPaymentToDelete = null;
+        }
+
+        function showDeleteUserConfirmation(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            currentUserToDelete = userId;
+            deleteUserInfo.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 4px;"><i class="fas fa-store" style="color: var(--danger-color);"></i> ${escapeHtml(user.storeName || 'Sem nome')}</div>
+                <div style="color: var(--text-secondary);">${escapeHtml(user.email)}</div>
+                ${user.phone ? `<div style="color: var(--text-secondary);">${escapeHtml(user.phone)}</div>` : ''}
+            `;
+            deleteUserConfirmInput.value = '';
+            confirmDeleteUserBtn.disabled = true;
+            deleteUserModal.style.display = 'flex';
+            setTimeout(() => { deleteUserConfirmInput.focus(); }, 300);
+        }
+
+        function closeDeleteUserModalHandler() {
+            deleteUserModal.style.display = 'none';
+            deleteUserConfirmInput.value = '';
+            confirmDeleteUserBtn.disabled = true;
+            currentUserToDelete = null;
+        }
+
+        async function deleteUser() {
+            if (!currentUserToDelete) return;
+            try {
+                showLoading();
+                const userId = currentUserToDelete;
+
+                // Excluir subcoleções (produtos e categorias)
+                const [prodSnap, catSnap] = await Promise.all([
+                    db.collection('lojas').doc(userId).collection('produtos').get(),
+                    db.collection('lojas').doc(userId).collection('categorias').get()
+                ]);
+                const deleteBatch = db.batch();
+                prodSnap.forEach(d => deleteBatch.delete(d.ref));
+                catSnap.forEach(d => deleteBatch.delete(d.ref));
+                if (!deleteBatch._mutations || prodSnap.size + catSnap.size > 0) {
+                    await deleteBatch.commit();
+                }
+
+                // Excluir pagamentos associados
+                const pagSnap = await db.collection('pagamentos').where('userId', '==', userId).get();
+                if (!pagSnap.empty) {
+                    const pagBatch = db.batch();
+                    pagSnap.forEach(d => pagBatch.delete(d.ref));
+                    await pagBatch.commit();
+                }
+
+                // Excluir documento principal da loja
+                await db.collection('lojas').doc(userId).delete();
+
+                // Registrar na coleção de contas excluídas (impede reuso da sessão)
+                await db.collection('contasExcluidas').doc(userId).set({
+                    deletedAt: new Date().toISOString(),
+                    deletedBy: adminUser.email
+                });
+
+                const idx = users.findIndex(u => u.id === userId);
+                if (idx !== -1) users.splice(idx, 1);
+                closeDeleteUserModalHandler();
+                updateUsersList();
+                updateStats();
+                hideLoading();
+                showNotification('Conta excluída definitivamente!', 'success');
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                hideLoading();
+                showNotification('Erro ao excluir conta.', 'error');
+            }
         }
 
         function switchTab(tabId) {
